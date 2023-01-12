@@ -179,11 +179,14 @@ const parse_post_data = (req) => {
 const service_create = async (req, res) => {
     const query = await parse_post_data(req);
     const hostname = query.get("hostname");
+    if (!hostname) {
+        throw new Error("You must provide hostname");
+    }
     if (await has_hostname_entry(hostname)) {
         throw new Error("Hostname already exists");
     }
-    await create_a_record(hostname, '127.0.0.1');
-    await create_aaaa_record(hostname, '::1');
+    // await create_a_record(hostname, '127.0.0.1');
+    // await create_aaaa_record(hostname, '::1');
     const token = await add_token_entry(hostname);
     await add_hostname_entry(hostname);
     create_json_response(res, {
@@ -230,6 +233,9 @@ const service_update = async (req, res) => {
 const service_delete = async (req, res) => {
     const query = await parse_post_data(req);
     const token = query.get("token");
+    if (!token) {
+        throw new Error("You must provide token");
+    }
     const hostname = await get_token_entry(token);
     await delete_records(hostname);
     await delete_token_entry(token);
