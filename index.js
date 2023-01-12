@@ -64,7 +64,7 @@ const has_hostname_entry = async (hostname) => {
     } catch (e) {
         return false;
     }
-}
+};
 
 const execute_nsupdate = (input) => {
     return new Promise((resolve, reject) => {
@@ -200,6 +200,9 @@ const service_create = async (req, res) => {
 const service_update = async (req, res) => {
     const query = await parse_post_data(req);
     const token = query.get("token");
+    if (!token) {
+        throw new Error("You must provide token");
+    }
     const ip = String(query.get("ip") || req.headers['x-real-ip'] || req.socket.remoteAddress).trim();
     const hostname = await get_token_entry(token);
     const has_hostname = await has_hostname_entry(hostname);
@@ -252,6 +255,7 @@ const server = http.createServer(async (req, res) => {
         }
         throw new Error("Invalid URL");
     } catch (e) {
+        console.error(e);
         res.statusCode = 400;
         create_json_response(res, {
             "error": e?.message ?? String(e),
