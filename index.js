@@ -172,12 +172,24 @@ const parse_post_data = (req) => {
 };
 
 /**
+ * Parse GET or POST data.
+ * @param {http.IncomingMessage} req 
+ * @returns 
+ */
+const parse_form_data = async (req) => {
+    if (req.method !== 'POST') {
+        return new URLSearchParams(req.url.split('?').slice(1).join('?'));
+    }
+    return parse_post_data(req);
+};
+
+/**
  * Creates a new DDNS record.
  * @param {http.IncomingMessage} req 
  * @param {http.ServerResponse<http.IncomingMessage>} res 
  */
 const service_create = async (req, res) => {
-    const query = await parse_post_data(req);
+    const query = await parse_form_data(req);
     const hostname = query.get("hostname");
     if (!hostname) {
         throw new Error("You must provide hostname");
@@ -201,7 +213,7 @@ const service_create = async (req, res) => {
  * @param {http.ServerResponse<http.IncomingMessage>} res 
  */
 const service_update = async (req, res) => {
-    const query = await parse_post_data(req);
+    const query = await parse_form_data(req);
     const token = query.get("token");
     if (!token) {
         throw new Error("You must provide token");
@@ -231,7 +243,7 @@ const service_update = async (req, res) => {
 };
 
 const service_delete = async (req, res) => {
-    const query = await parse_post_data(req);
+    const query = await parse_form_data(req);
     const token = query.get("token");
     if (!token) {
         throw new Error("You must provide token");
@@ -246,16 +258,17 @@ const service_delete = async (req, res) => {
 };
 
 const server = http.createServer(async (req, res) => {
+    const [url] = req.url.split("?");
     try {
-        if (req.url === "/create") {
+        if (url === "/create") {
             await service_create(req, res);
             return;
         }
-        if (req.url === "/update") {
+        if (url === "/update") {
             await service_update(req, res);
             return;
         }
-        if (req.url === "/delete") {
+        if (url === "/delete") {
             await service_delete(req, res);
             return;
         }
